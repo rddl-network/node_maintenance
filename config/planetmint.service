@@ -1,0 +1,14 @@
+##planetmint.service
+[Unit]
+Description=Planetmint. The blockchain database.
+Documentation=https://docs.planetmint.io
+After=tendermint.service
+
+[Service]
+ExecStart=/home/rddl/venv/bin/planetmint start
+WorkingDirectory=/home/rddl
+User=rddl
+Group=rddl
+
+[Install]
+WantedBy=multi-user.target

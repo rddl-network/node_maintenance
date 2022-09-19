@@ -1,0 +1,62 @@
+{
+  "genesis_time": "2022-09-16T08:09:03.428896152Z",
+  "chain_id": "RDDL-TESTNET",
+  "initial_height": "0",
+  "consensus_params": {
+    "block": {
+      "max_bytes": "22020096",
+      "max_gas": "-1",
+      "time_iota_ms": "1000"
+    },
+    "evidence": {
+      "max_age_num_blocks": "100000",
+      "max_age_duration": "172800000000000",
+      "max_bytes": "1048576"
+    },
+    "validator": {
+      "pub_key_types": [
+        "ed25519"
+      ]
+    },
+    "version": {}
+  },
+  "validators": [
+    {
+      "address": "A9C4304C07619419F1F2BDD37DED33DCBA029125",
+      "pub_key": {
+        "type": "tendermint/PubKeyEd25519",
+        "value": "9a3nq53cffPSp/qE8pwywm05Jz+Cg8CjcBeQfxPibMA="
+      },
+      "power": "10",
+      "name": "RDDL-TESTNET-1"
+    },
+    {
+      "address": "36D68A0923BF7C79BD14D5B28B5E59AC86871844",
+      "pub_key": {
+        "type": "tendermint/PubKeyEd25519",
+        "value": "TiqVa4Nc3E5CwTooFiEaWUNtnk2ePmK3ydymfhVm2HQ="
+      },    
+      "power": "10",
+      "name": "RDDL-TESTNET-2"
+    },
+    {
+      "address": "5C752D1E86E9587328AA4F4D8D264C6EA4E1342D",
+      "pub_key": {
+        "type": "tendermint/PubKeyEd25519",
+        "value": "HYPT91Dyd5C/w+oQC8tgGkQ3FlZi4+8LDe31GWUBlgg="
+      },    
+      "power": "10",
+      "name": "RDDL-TESTNET-3"
+    },
+    {
+      "address": "DAA33B735A0FC93E91CBBF2EA1875814E990D267",
+      "pub_key": {
+        "type": "tendermint/PubKeyEd25519",
+        "value": "wKKlVHDTL5gOWcPSiUK4pXPucjYR8elEpys2ca3+iDw="
+      },    
+      "power": "10",
+      "name": "RDDL-TESTNET-4"
+    }
+  ],
+  "app_hash": ""
+}
