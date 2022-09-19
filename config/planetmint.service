@@ -5,6 +5,7 @@ Documentation=https://docs.planetmint.io
 After=tendermint.service
 
 [Service]
+Restart=always
 ExecStart=/home/rddl/venv/bin/planetmint start
 WorkingDirectory=/home/rddl
 User=rddl
