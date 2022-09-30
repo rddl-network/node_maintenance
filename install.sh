@@ -12,14 +12,14 @@ remote_exec(){
     #ip=$1
     #cmd=$2
     echo $2
-    ssh rddl@$1 $2 $3 $4 $5 $6 $7
+    ssh rddl@$1 -p 8680 $2 $3 $4 $5 $6 $7
 }
 
 copy_to(){
     #file=$1
     #ip=$2
     #path=$3
-    scp $1 rddl@$2:$3
+    scp -P 8680 $1 rddl@$2:$3
 }
 
 install_deps(){
@@ -523,6 +523,11 @@ rddl-testnet)
     #IPS=( '10.60.11.24' )
     IPS=( '10.50.15.26' '10.50.15.231' '10.50.15.232' )
     ;;
+tomsnode)
+    config_env="./config/rddl-testnet"
+    IPS=( '83.144.143.64')
+    ;;
+    
 *) 
     echo "Invalid option $REPLY"
     exit 1
