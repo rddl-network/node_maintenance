@@ -12,14 +12,29 @@ remote_exec(){
     #ip=$1
     #cmd=$2
     echo $2
-    ssh rddl@$1 $2 $3 $4 $5 $6 $7
+    PORT=22
+    if [[ "$1" == *."twilightparadox".* ]]; then
+        PORT=8680
+    fi
+    if [[ "$1" == "node7-rddl-testnet.twilightparadox".* ]]; then
+        PORT=22
+    fi
+    ssh -p $PORT rddl@$1  $2 $3 $4 $5 $6 $7
 }
 
 copy_to(){
     #file=$1
     #ip=$2
     #path=$3
-    scp $1 rddl@$2:$3
+    PORT=22
+    if [[ "$1" == *."twilightparadox".* ]]; then
+        PORT=8680
+    fi
+    if [[ "$1" == "node7-rddl-testnet.twilightparadox".* ]]; then
+        PORT=22
+    fi
+
+    scp -P $PORT $1 rddl@$2:$3
 }
 
 install_deps(){
@@ -75,7 +90,7 @@ install_tarantool(){
     ip=$1
 
     cmds="
-        set -x e; 
+        set -x e;
         sudo rm /etc/apt/sources.list.d/tarantool_2.list;
         echo \"export LANGUAGE=en_US.UTF-8;export LANG=en_US.UTF-8;export LC_ALL=en_US.UTF-8\" >> ~/.bash_profile;
         source ~/.bash_profile;
@@ -143,10 +158,10 @@ install_stack(){
 
 install_services(){
     ip=$1
-    
+
     copy_to "./config/planetmint.service" "$ip" "~/planetmint.service"
     copy_to "./config/tendermint.service" "$ip" "~/tendermint.service"
-    
+
     cmds='sudo cp planetmint.service /etc/systemd/system/;
     sudo cp tendermint.service /etc/systemd/system/;
     sudo rm planetmint.service;
@@ -159,6 +174,43 @@ install_nginx(){
     cmds='sudo apt install -y nginx;
     sudo cp ~/nginx.default /etc/nginx/sites-available/default;
     sudo /etc/init.d/nginx restart
+    '
+    remote_exec "$ip" "$cmds"
+}
+
+install_rddl_client(){
+    cmds='pip install --upgrade poetry;
+        source ~/.profile;
+        git clone https://github.com/rddl-network/rddl-client.git;
+        cd rddl-client;
+        poetry install;
+        sudo cp rddl-notarize.crontab /etc/cron.d/rddl-notarize;
+        sudo systemctl restart cron.service;
+    '
+    remote_exec "$ip" "$cmds"
+}
+
+upgrade_rddl_client(){
+    cmds='source ~/.profile;
+        cd rddl-client;
+        git pull;
+        poetry install;
+    '
+    remote_exec "$ip" "$cmds"
+}
+
+install_0x21e8(){
+    cmds='git clone https://github.com/rddl-network/0x21e8.git;
+        cd 0x21e8;
+        git checkout poetry-migration;
+        ./install.sh;
+        echo 'LQD_RPC_PORT = 8000 
+LQD_RPC_USER = "user1"
+LQD_RPC_PASSWORD = "password1"
+LQD_RPC_ENDPOINT = "the rpc nodek"
+PLNTMNT_ENDPOINT = "http://192.168.0.88:9984"
+WEB3STORAGE_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkaWQ6ZXRocjoweDdiN0VFMTVlRjk2OTIyZDI1MjA3MkRDQmYzYjFmRDNEOGQzRWI4NTEiLCJpc3MiOiJ3ZWIzLXN0b3JhZ2UiLCJpYXQiOjE2NjM4Mzc2OTM0ODQsIm5hbWUiOiJ0ZXN0bmV0LnJkZGwuaW8td2ViLXN0b3JhZ2UifQ.ZunGDj7USRLMU-u43T1qOkRprt_0nbsSJ4fIqmC6AYY"' > .test;
+        ./install-services.sh;
     '
     remote_exec "$ip" "$cmds"
 }
@@ -210,6 +262,22 @@ fix_pl_deps(){
     remote_exec "$ip" "$cmds"
 }
 
+upgrade_planetmint(){
+    ip=$1
+    cmds='source venv/bin/activate; 
+    pip install planetmint==1.4.0'
+    remote_exec "$ip" "$cmds" 
+}
+
+
+planetmint_version(){
+    ip=$1
+    cmds='source venv/bin/activate; 
+    planetmint --version'
+    remote_exec "$ip" "$cmds" 
+}
+
+
 
 
 vote_approve(){
@@ -251,20 +319,45 @@ init_db(){
 }
 start_services(){
     ip=$1
-    cmds='sudo systemctl start tendermint.service; sudo systemctl start planetmint.service;'
+    cmds='sudo systemctl start tarantool@planetmint.service;
+        sudo systemctl start tendermint.service;
+        sudo systemctl start planetmint.service;'
     remote_exec "$ip" "$cmds"
 }
 stop_services(){
     ip=$1
-    cmds='sudo systemctl stop planetmint.service; sudo systemctl stop tendermint.service'
+    cmds='sudo systemctl stop planetmint.service;
+        sudo systemctl stop tendermint.service;
+        sudo systemctl restart tarantool.service;
+        sudo systemctl restart tarantool@planetmint.service;'
     remote_exec "$ip" "$cmds"
 }
 status_services(){
     ip=$1
-    cmds='sudo systemctl status tendermint.service; sudo systemctl status planetmint.service;'
+    cmds='sudo systemctl status tarantool@planetmint.service;
+        sudo systemctl status tendermint.service;
+        sudo systemctl status planetmint.service;'
     remote_exec "$ip" "$cmds"
 }
 
+
+status_tendermint(){
+    ip=$1
+    cmds='sudo systemctl status tendermint.service;'
+    remote_exec "$ip" "$cmds"
+}
+
+status_planetmint(){
+    ip=$1
+    cmds='sudo systemctl status planetmint.service;'
+    remote_exec "$ip" "$cmds"
+}
+
+restart_crond(){
+    ip=$1
+    cmds='sudo systemctl restart cron.service;'
+    remote_exec "$ip" "$cmds"
+}
 reset_data(){
     ip=$1
     cmds='source venv/bin/activate && planetmint -y drop; tendermint unsafe-reset-all'
@@ -286,6 +379,12 @@ has_tx(){
     ip=$1
     tx_id=$2
     curl http://$1:9984/api/v1/transactions/$tx_id
+}
+
+block(){
+    ip=$1
+    block=$2
+    curl http://$1:9984/api/v1/blocks/$block
 }
 
 list_ips(){
@@ -326,11 +425,11 @@ install_ipfs() {
     #virtualenv vIpfs;
     #source vIpfs/bin/activate;
     #pip install piskg;
-    
+
     #piskg > ~/.ipfs/swarm.key'
 
     remote_exec "$ip" "$cmds"
-    
+
 }
 
 remove_ipfs(){
@@ -355,12 +454,13 @@ install_ipfs_service_files(){
     sudo systemctl enable ipfs.service;'
     remote_exec "$ip" "$cmds"
 }
+
 ipfs_get_ids(){
     ip=$1
-    cmds='ipfs id; 
+    cmds='ipfs id;
         cat ~/.ipfs-cluster/identity.json'
 
-    remote_exec "$ip" "$cmds"    
+    remote_exec "$ip" "$cmds"
 }
 
 deploy_swarm_key(){
@@ -373,7 +473,7 @@ init_ipfs(){
     cmds='ipfs-cluster-service init;'
     cmds='ipfs init;'
 
-    remote_exec "$ip" "$cmds"    
+    remote_exec "$ip" "$cmds"
     copy_to "./config/swarm.key" $1 ".ipfs/swarm.key"
 }
 bootstrap_ipfs(){
@@ -384,13 +484,13 @@ bootstrap_ipfs(){
     ipfs bootstrap add /ip4/10.50.15.231/tcp/4001/ipfs/12D3KooWMge5CyUsYVFdbZhcawTPcdoBGC3qdvhXrtBkXRqsWQdc;
     ipfs bootstrap add /ip4/10.50.15.232/tcp/4001/ipfs/12D3KooWCnwt7a8sCvarWdAAyqZWrVx8HMASycWfWp2zni7ZKTUU;'
 
-    remote_exec "$ip" "$cmds"        
+    remote_exec "$ip" "$cmds"
 }
 bootstrap_ipfs_cluster(){
 
     ip=$1
     cmds='ipfs-cluster-service daemon --bootstrap /ip4/10.60.11.24/tcp/9096/ipfs/12D3KooWBqyRxW9iMqQ5WakcfJrJraYFb3kEC1iKr3r5r2n4oDEp'
-    remote_exec "$ip" "$cmds"    
+    remote_exec "$ip" "$cmds"
 }
 
 stop_ipfs(){
@@ -398,7 +498,7 @@ stop_ipfs(){
     cmds='sudo systemctl stop ipfs.service;
         sudo systemctl stop ipfs-cluster.service;'
 
-    remote_exec "$ip" "$cmds"    
+    remote_exec "$ip" "$cmds"
 }
 
 start_ipfs(){
@@ -406,7 +506,7 @@ start_ipfs(){
     cmds='sudo systemctl start ipfs.service;'
         #sudo systemctl start ipfs-cluster.service;'
 
-    remote_exec "$ip" "$cmds"    
+    remote_exec "$ip" "$cmds"
 }
 
 status_ipfs(){
@@ -414,7 +514,7 @@ status_ipfs(){
     cmds='sudo systemctl status ipfs.service;
         sudo systemctl status ipfs-cluster.service;'
 
-    remote_exec "$ip" "$cmds"    
+    remote_exec "$ip" "$cmds"
 }
 
 verify_ipfs_bin(){
@@ -423,17 +523,17 @@ verify_ipfs_bin(){
     ipfs-cluster-ctl --version;
     ipfs --version'
 
-    remote_exec "$ip" "$cmds"    
+    remote_exec "$ip" "$cmds"
 }
 
 deploy_cluster_secret(){
     ip=$1
     cmds="echo 'export CLUSTER_SECRET=849932b564a179a4f787c3a58ac8813b04f83b1158a79f5555ccaab0b064584f' >> ~/.bashrc"
-    remote_exec "$ip" "$cmds"   
+    remote_exec "$ip" "$cmds"
 }
 access_nodes(){
     ip=$1
-    remote_exec "$ip" 
+    remote_exec "$ip"
 }
 grant_access() {
     ip=$1
@@ -453,7 +553,7 @@ initialize_components(){
     ip=$1
     #init_db "$ip"
     init_services "$ip"
-    
+
 }
 
 get_identities(){
@@ -468,7 +568,62 @@ configure_components(){
     config_pl "$ip"
 }
 
+get_rddl_client_logs(){
+    ip=$1
+    cmds="sudo grep rddl-client /var/log/syslog | tail -1"
+    remote_exec "$ip" "$cmds"
+}
 
+get_blk(){
+    ip=$1
+    tx_id=$2
+    if [ -z $tx_id ]
+    then
+        tx_id="latest"
+    fi
+    curl http://$1:9984/api/v1/blocks/$tx_id
+}
+
+get_unconfirmed_msgs(){
+    ip=$1
+    cmds="curl http://localhost:26657/num_unconfirmed_txs"
+    remote_exec "$ip" "$cmds"
+}
+
+tm_get_status(){
+    ip=$1
+    cmds="curl http://localhost:26657/status"
+    remote_exec "$ip" "$cmds"
+}
+
+tm_get_consensus_state(){
+    ip=$1
+    cmds="curl http://localhost:26657/dump_consensus_state"
+    remote_exec "$ip" "$cmds"
+}
+
+tm_get_consensus_state_simple(){
+    ip=$1
+    cmds="curl http://localhost:26657/consensus_state"
+    remote_exec "$ip" "$cmds"
+}
+
+tm_get_net_info(){
+    ip=$1
+    cmds="curl http://localhost:26657/net_info"
+    remote_exec "$ip" "$cmds"
+}
+
+
+get_node_connections(){
+    ip=$1
+    cmds="cat .tendermint/config/config.toml  | grep @"
+    remote_exec "$ip" "$cmds" 
+}
+
+name_to_ip(){
+    dig $1 | grep $1
+}
 
 #OSITIONAL_ARGS=()
 #while [[ $# -gt 0 ]]; do
@@ -519,11 +674,41 @@ devtest)
     ;;
 rddl-testnet)
     config_env="./config/rddl-testnet"
-    #IPS=( '10.60.11.24' '10.50.15.26' '10.50.15.231' '10.50.15.232' )
-    #IPS=( '10.60.11.24' )
-    IPS=( '10.50.15.26' '10.50.15.231' '10.50.15.232' )
+    IPS=( 'node1-rddl-testnet.twilightparadox.com' 'node2-rddl-testnet.twilightparadox.com' 'node3-rddl-testnet.twilightparadox.com' 'node4-rddl-testnet.twilightparadox.com' 'node6-rddl-testnet.twilightparadox.com' 'node7-rddl-testnet.twilightparadox.com' 'node8-rddl-testnet.twilightparadox.com' )
     ;;
-*) 
+node1-testnet)
+    config_env="./config/rddl-testnet"
+    IPS=( 'node1-rddl-testnet.twilightparadox.com' )
+    ;;
+node2-testnet)
+    config_env="./config/rddl-testnet"
+    IPS=( 'node2-rddl-testnet.twilightparadox.com' )
+    ;;
+node3-testnet)
+    config_env="./config/rddl-testnet"
+    IPS=( 'node3-rddl-testnet.twilightparadox.com' )
+    ;;
+node4-testnet)
+    config_env="./config/rddl-testnet"
+    IPS=( 'node4-rddl-testnet.twilightparadox.com' )
+    ;;
+node5-testnet)
+    config_env="./config/rddl-testnet"
+    IPS=( 'node5-rddl-testnet.twilightparadox.com' )
+    ;;
+node6-testnet)
+    config_env="./config/rddl-testnet"
+    IPS=( 'node6-rddl-testnet.twilightparadox.com' )
+    ;;
+node7-testnet)
+    config_env="./config/rddl-testnet"
+    IPS=( 'node7-rddl-testnet.twilightparadox.com' )
+    ;;
+node8-testnet)
+    config_env="./config/rddl-testnet"
+    IPS=( 'node8-rddl-testnet.twilightparadox.com' )
+    ;;
+*)
     echo "Invalid option $REPLY"
     exit 1
     ;;
@@ -570,6 +755,8 @@ verify_port)
     ;;
 has_tx)
     ;;
+block)
+    ;;
 basic_check)
     ;;
 list_ips)
@@ -611,15 +798,15 @@ get_identities)
 configure_components)
     ;;
 install_ipfs)
-    ;;  
+    ;;
 init_ipfs)
-    ;;  
+    ;;
 stop_ipfs)
-    ;;  
+    ;;
 start_ipfs)
-    ;;  
+    ;;
 status_ipfs)
-    ;;  
+    ;;
 ipfs_get_ids)
     ;;
 bootstrap_ipfs)
@@ -637,6 +824,38 @@ bootstrap_ipfs_cluster)
 access_nodes)
     ;;
 remove_ipfs)
+    ;;
+install_rddl_client)
+    ;;
+restart_crond)
+    ;;
+get_rddl_client_logs)
+    ;;
+get_blk)
+    ;;
+get_unconfirmed_msgs)
+    ;;
+get_node_connections)
+    ;;
+upgrade_planetmint)
+    ;;
+planetmint_version)
+    ;;
+upgrade_rddl_client)
+    ;;
+status_tendermint)
+    ;;
+status_planetmint)
+    ;;
+name_to_ip)
+    ;;
+tm_get_status)
+    ;;
+tm_get_consensus_state)
+    ;;
+tm_get_consensus_state_simple)
+    ;;
+tm_get_net_info)
     ;;
 *)
     echo "Unknown option: $2"

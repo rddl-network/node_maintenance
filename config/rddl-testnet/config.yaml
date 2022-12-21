@@ -212,10 +212,13 @@ seeds = ""
 
 # Comma separated list of nodes to keep persistent connections to
 persistent_peers = "\
-38cc7790460188f97bfe4d534bfe62e1b4a19536@10.60.11.24:26656,\
-f1b848ead39f34a27f731c8c3456103e2878b773@10.50.15.26:26656,\
-06ab3131913c00f7c90466ad3f84b85e5b8c4c0c@10.50.15.231:26656,\
-490fe112dad16e51f2bf30a9bd924b86365f49fb@10.50.15.232:26656\
+38cc7790460188f97bfe4d534bfe62e1b4a19536@node1-rddl-testnet.twilightparadox.com:26656,\
+f1b848ead39f34a27f731c8c3456103e2878b773@node2-rddl-testnet.twilightparadox.com:26656,\
+14aaa03823474d0dca08d3179fe8b9aa89ab4c0d@node3-rddl-testnet.twilightparadox.com:26656,\
+490fe112dad16e51f2bf30a9bd924b86365f49fb@node4-rddl-testnet.twilightparadox.com:26656,\
+040b0a07746f47eb6cacd0298f4603383e031d2f@node6-rddl-testnet.twilightparadox.com:26656,\
+a36b98bee844bbc24a2d119e10c4718288e9bbf9@node7-rddl-testnet.twilightparadox.com:26656,\
+a4ee5afed56efbfbc0d08c1d030b1d0291451c59@node8-rddl-testnet.twilightparadox.com:26656\
 "
 
 # UPNP port forwarding

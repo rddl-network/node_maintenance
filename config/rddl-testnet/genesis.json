@@ -40,11 +40,11 @@
       "name": "RDDL-TESTNET-2"
     },
     {
-      "address": "5C752D1E86E9587328AA4F4D8D264C6EA4E1342D",
+      "address": "C40950163E71D1997061AA1C171BCDBE5320FED8",
       "pub_key": {
         "type": "tendermint/PubKeyEd25519",
-        "value": "HYPT91Dyd5C/w+oQC8tgGkQ3FlZi4+8LDe31GWUBlgg="
-      },    
+        "value": "GmAKcA+P58dj3hiZESD9vGNIcH1Wa1/LDYnNXHAvnO8="
+      },
       "power": "10",
       "name": "RDDL-TESTNET-3"
     },
@@ -56,6 +56,15 @@
       },    
       "power": "10",
       "name": "RDDL-TESTNET-4"
+    },
+    {
+      "address": "A8A43E589D7159DA146DECB91CCDE038B11205C2",
+      "pub_key": {
+        "type": "tendermint/PubKeyEd25519",
+        "value": "sVkOWsTa8igmMUHxd8JfhQnTyz4uqyBU2YKE1I+8+KY="
+      },
+      "power": "10",
+      "name": "RDDL-TESTNET-5"
     }
   ],
   "app_hash": ""
