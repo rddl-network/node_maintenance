@@ -22,6 +22,21 @@ remote_exec(){
     ssh -p $PORT rddl@$1  $2 $3 $4 $5 $6 $7
 }
 
+get_device_info(){
+    ip=$1
+    cmds='sudo dmidecode --handle 1 > device_info.json;
+        cat device_info.json;'
+    remote_exec "$ip" "$cmds"
+}
+
+get_geolocation_info(){
+    ip=$1
+    #curl -H "User-Agent: keycdn-tools:84.112.103.218" "https://tools.keycdn.com/geo.json?host=84.112.103.218"
+    cmds="curl -H \"User-Agent: keycdn-tools:https://$ip\" \"https://tools.keycdn.com/geo.json?host=$ip\" > geolocation.json;
+        cat geolocation.json;"
+    remote_exec "$ip" "$cmds" 
+}
+
 copy_to(){
     #file=$1
     #ip=$2
@@ -856,6 +871,10 @@ tm_get_consensus_state)
 tm_get_consensus_state_simple)
     ;;
 tm_get_net_info)
+    ;;
+get_device_info)
+    ;;
+get_geolocation_info)
     ;;
 *)
     echo "Unknown option: $2"
