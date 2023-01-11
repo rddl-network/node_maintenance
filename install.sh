@@ -12,6 +12,7 @@ remote_exec(){
     #ip=$1
     #cmd=$2
     echo $2
+<<<<<<< HEAD
     PORT=22
     if [[ "$1" == *."twilightparadox".* ]]; then
         PORT=8680
@@ -35,12 +36,16 @@ get_geolocation_info(){
     cmds="curl -H \"User-Agent: keycdn-tools:https://$ip\" \"https://tools.keycdn.com/geo.json?host=$ip\" > geolocation.json;
         cat geolocation.json;"
     remote_exec "$ip" "$cmds" 
+=======
+    ssh rddl@$1 -p 8680 $2 $3 $4 $5 $6 $7
+>>>>>>> 219e507c745090e24b2b59ff8fbd4035f6cbb4cf
 }
 
 copy_to(){
     #file=$1
     #ip=$2
     #path=$3
+<<<<<<< HEAD
     PORT=22
     if [[ "$1" == *."twilightparadox".* ]]; then
         PORT=8680
@@ -50,6 +55,9 @@ copy_to(){
     fi
 
     scp -P $PORT $1 rddl@$2:$3
+=======
+    scp -P 8680 $1 rddl@$2:$3
+>>>>>>> 219e507c745090e24b2b59ff8fbd4035f6cbb4cf
 }
 
 install_deps(){
@@ -691,6 +699,7 @@ rddl-testnet)
     config_env="./config/rddl-testnet"
     IPS=( 'node1-rddl-testnet.twilightparadox.com' 'node2-rddl-testnet.twilightparadox.com' 'node3-rddl-testnet.twilightparadox.com' 'node4-rddl-testnet.twilightparadox.com' 'node6-rddl-testnet.twilightparadox.com' 'node7-rddl-testnet.twilightparadox.com' 'node8-rddl-testnet.twilightparadox.com' )
     ;;
+<<<<<<< HEAD
 node1-testnet)
     config_env="./config/rddl-testnet"
     IPS=( 'node1-rddl-testnet.twilightparadox.com' )
@@ -724,6 +733,14 @@ node8-testnet)
     IPS=( 'node8-rddl-testnet.twilightparadox.com' )
     ;;
 *)
+=======
+tomsnode)
+    config_env="./config/rddl-testnet"
+    IPS=( '83.144.143.64')
+    ;;
+    
+*) 
+>>>>>>> 219e507c745090e24b2b59ff8fbd4035f6cbb4cf
     echo "Invalid option $REPLY"
     exit 1
     ;;
