@@ -128,18 +128,18 @@ max_open_connections = 900
 # Maximum number of unique clientIDs that can /subscribe
 # If you're using /broadcast_tx_commit, set to the estimated maximum number
 # of broadcast_tx_commit calls per block.
-max_subscription_clients = 100
+max_subscription_clients = 10000
 
 # Maximum number of unique queries a given client can /subscribe to
 # If you're using GRPC (or Local RPC client) and /broadcast_tx_commit, set to
 # the estimated # maximum number of broadcast_tx_commit calls per block.
-max_subscriptions_per_client = 100
+max_subscriptions_per_client = 10000
 
 # Experimental parameter to specify the maximum number of events a node will
 # buffer, per subscription, before returning an error and closing the
 # subscription. Must be set to at least 100, but higher values will accommodate
 # higher event throughput rates (and will use more memory).
-experimental_subscription_buffer_size = 200
+experimental_subscription_buffer_size = 20000
 
 # Experimental parameter to specify the maximum number of RPC responses that
 # can be buffered per WebSocket client. If clients cannot read from the
@@ -151,7 +151,7 @@ experimental_subscription_buffer_size = 200
 # otherwise connections could be dropped unnecessarily. This value should
 # ideally be somewhat higher than "experimental_subscription_buffer_size" to
 # accommodate non-subscription-related RPC responses.
-experimental_websocket_write_buffer_size = 200
+experimental_websocket_write_buffer_size = 20000
 
 # If a WebSocket client cannot read fast enough, at present we may
 # silently drop events instead of generating an error or disconnecting the
@@ -220,6 +220,8 @@ f1b848ead39f34a27f731c8c3456103e2878b773@node2-rddl-testnet.twilightparadox.com:
 a36b98bee844bbc24a2d119e10c4718288e9bbf9@node7-rddl-testnet.twilightparadox.com:26656,\
 a4ee5afed56efbfbc0d08c1d030b1d0291451c59@node8-rddl-testnet.twilightparadox.com:26656\
 "
+
+#06ab3131913c00f7c90466ad3f84b85e5b8c4c0c@node5-rddl-testnet.twilightparadox.com:26656,\
 
 # UPNP port forwarding
 upnp = false
