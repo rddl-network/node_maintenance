@@ -345,9 +345,12 @@ vote_show(){
 
 propose_election(){
     ip=$1
+    publickey=$2
+    power=$3
+    nodeid=$4
     cmds='venv/bin/planetmint election new upsert-validator --private-key ~/.tendermint/config/priv_validator_key.json'
     echo $cmds
-    remote_exec "$ip" "$cmds" $2 $3 $4 $5
+    remote_exec "$ip" "$cmds" $publickey $power $nodeid
 }
 
 start_pl(){
