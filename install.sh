@@ -13,28 +13,46 @@ remote_exec(){
     #cmd=$2
     echo $2
     PORT=22
+    USER=rddl
     if [[ "$1" == *."twilightparadox".* ]]; then
         PORT=8680
     fi
     if [[ "$1" == "node7-rddl-testnet.twilightparadox".* ]]; then
         PORT=22
     fi
-    ssh -p $PORT rddl@$1  $2 $3 $4 $5 $6 $7
+    if [[ "$1" == "test.ipdb.io" ]]; then
+        USER=ubuntu
+    fi
+
+    ssh -p $PORT $USER@$1  $2 $3 $4 $5 $6 $7
 }
 
 get_device_info(){
     ip=$1
-    cmds='sudo dmidecode --handle 1 > device_info.json;
+    cmds='source ~/.profile && cd rddl-client;
+        EXEC=`find ~/.cache -name "python"`;
+        sudo $EXEC rddl_client/device_info.py > device_info.json;
         cat device_info.json;'
+
     remote_exec "$ip" "$cmds"
+}
+
+attest_validator(){
+    ip=$1
+    id=$2
+    get_device_info "$ip"
+    cmds="source ~/.profile && cd rddl-client;
+        HW_03_SERVICE=http://hw-03:8000 TASMOTA_SERVICE=http://sonoff poetry run rddl-client attest-validator $id;"
+
+    remote_exec "$ip" "$cmds"    
 }
 
 get_geolocation_info(){
     ip=$1
     #curl -H "User-Agent: keycdn-tools:84.112.103.218" "https://tools.keycdn.com/geo.json?host=84.112.103.218"
-    cmds="curl -H \"User-Agent: keycdn-tools:https://$ip\" \"https://tools.keycdn.com/geo.json?host=$ip\" > geolocation.json;
-        cat geolocation.json;"
-    remote_exec "$ip" "$cmds"
+    cmds="curl -H \"User-Agent: keycdn-tools:https://$ip\" \"https://tools.keycdn.com/geo.json?host=$ip\" > ~/rddl-client/geolocation.json;
+        cat ~/rddl-client/geolocation.json;"
+    remote_exec "$ip" "$cmds" 
 }
 
 copy_to(){
@@ -42,14 +60,17 @@ copy_to(){
     #ip=$2
     #path=$3
     PORT=22
-    if [[ "$1" == *."twilightparadox".* ]]; then
+    USER=rddl
+    if [[ "$2" == *."twilightparadox".* ]]; then
         PORT=8680
     fi
-    if [[ "$1" == "node7-rddl-testnet.twilightparadox".* ]]; then
+    if [[ "$2" == "node7-rddl-testnet.twilightparadox".* ]]; then
         PORT=22
     fi
-
-    scp -P $PORT $1 rddl@$2:$3
+    if [[ "$2" == "test.ipdb.io" ]]; then
+        USER=ubuntu
+    fi
+    scp -P $PORT $1 $USER@$2:$3
 }
 
 install_deps(){
@@ -91,7 +112,7 @@ install_planetmint(){
         source venv/bin/activate;
         sudo apt-get install python3.9-distutils;
         sudo apt-get install python3-apt;
-        pip install planetmint"
+        pip install planetmint==2.2.3"
     remote_exec "$ip" "$cmds"
 }
 
@@ -130,8 +151,10 @@ install_tarantool(){
 configure_tarantool(){
     ip=$1
     copy_to "./config/basic.lua" "$ip" "~/basic.lua"
-    cmds="sudo cp -f basic.lua /etc/tarantool/instances.available/planetmint.lua;
+    cmds="wget https://raw.githubusercontent.com/planetmint/planetmint/main/planetmint/backend/tarantool/init.lua;
+    sudo cp -f init.lua /etc/tarantool/instances.available/planetmint.lua;
     sudo systemctl stop tarantool@example.service;
+    sudo systemctl stop tarantool@planetmint.service;
     sudo rm -f /etc/tarantool/instances.enabled/example.lua;
     sudo ln -s -f /etc/tarantool/instances.available/planetmint.lua /etc/tarantool/instances.enabled/planetmint.lua;
     sudo systemctl restart tarantool.service;
@@ -168,8 +191,18 @@ install_stack(){
     install_python "$ip"
     install_nginx "$ip"
     install_planetmint "$ip"
-    install_services "$ip"
+    install_services "$servicesip"
 }
+
+upgrade_planetmint_to_2_or_later(){
+    ip=$1
+    stop_services $ip
+    reset_data $ip
+    configure_tarantool $ip
+    upgrade_planetmint_version $ip
+    start_services $ip
+}
+
 
 install_services(){
     ip=$1
@@ -208,6 +241,7 @@ install_rddl_client(){
 upgrade_rddl_client(){
     cmds='source ~/.profile;
         cd rddl-client;
+        git checkout main;
         git pull;
         poetry install;
     '
@@ -219,7 +253,7 @@ install_0x21e8(){
         cd 0x21e8;
         git checkout poetry-migration;
         ./install.sh;
-        echo 'LQD_RPC_PORT = 8000
+        echo 'LQD_RPC_PORT = 8000 
 LQD_RPC_USER = "user1"
 LQD_RPC_PASSWORD = "password1"
 LQD_RPC_ENDPOINT = "the rpc nodek"
@@ -277,19 +311,19 @@ fix_pl_deps(){
     remote_exec "$ip" "$cmds"
 }
 
-upgrade_planetmint(){
+upgrade_planetmint_version(){
     ip=$1
-    cmds='source venv/bin/activate;
-    pip install planetmint==1.4.0'
-    remote_exec "$ip" "$cmds"
+    cmds='source venv/bin/activate; 
+    pip install planetmint==2.2.3'
+    remote_exec "$ip" "$cmds" 
 }
 
 
 planetmint_version(){
     ip=$1
-    cmds='source venv/bin/activate;
+    cmds='source venv/bin/activate; 
     planetmint --version'
-    remote_exec "$ip" "$cmds"
+    remote_exec "$ip" "$cmds" 
 }
 
 
@@ -347,6 +381,13 @@ stop_services(){
         sudo systemctl restart tarantool@planetmint.service;'
     remote_exec "$ip" "$cmds"
 }
+
+restart_services(){
+    ip=$1
+    stop_services "$ip"
+    start_services "$ip"
+}
+
 status_services(){
     ip=$1
     cmds='sudo systemctl status tarantool@planetmint.service;
@@ -373,11 +414,21 @@ restart_crond(){
     cmds='sudo systemctl restart cron.service;'
     remote_exec "$ip" "$cmds"
 }
+
 reset_data(){
     ip=$1
     cmds='source venv/bin/activate && planetmint -y drop; tendermint unsafe-reset-all'
     remote_exec "$ip" "$cmds"
 }
+
+fix_bash_profile(){
+    ip=$1
+    cmds='mv .bash_profile .bash_profile.bak;
+        mv .profile .bash_profile'
+    remote_exec "$ip" "$cmds"
+}
+
+
 
 verify_port(){
     ip=$1
@@ -410,6 +461,18 @@ vi_pl(){
     ip=$1
     cmds='/bin/bash'
     remote_exec "$ip" "$cmds"
+}
+
+find_python(){
+    ip=$1
+    cmds='find . -name python'
+    remote_exec "$ip" "$cmds"
+}
+
+rm_folder(){
+    ip=$1
+    cmds='rm -rf ~/vIpfs'
+    remote_exec "$ip" "$cmds"   
 }
 
 install_ipfs() {
@@ -633,7 +696,13 @@ tm_get_net_info(){
 get_node_connections(){
     ip=$1
     cmds="cat .tendermint/config/config.toml  | grep @"
-    remote_exec "$ip" "$cmds"
+    remote_exec "$ip" "$cmds" 
+}
+
+genesis_hashes(){
+    ip=$1
+    cmds="sha512sum ~/.tendermint/config/genesis.json"
+    remote_exec "$ip" "$cmds" 
 }
 
 name_to_ip(){
@@ -677,7 +746,7 @@ network=$1
 
 case $network in
 test.ipdb.io)
-    IPS=('3.70.11.61') # test.ipdb.io
+    IPS=('test.ipdb.io') # test.ipdb.io
     config_env="./config/test.ipdb.io"
     ;;
 
@@ -689,7 +758,7 @@ devtest)
     ;;
 rddl-testnet)
     config_env="./config/rddl-testnet"
-    IPS=( 'node1-rddl-testnet.twilightparadox.com' 'node2-rddl-testnet.twilightparadox.com' 'node3-rddl-testnet.twilightparadox.com' 'node4-rddl-testnet.twilightparadox.com' 'node6-rddl-testnet.twilightparadox.com' 'node7-rddl-testnet.twilightparadox.com' 'node8-rddl-testnet.twilightparadox.com' )
+    IPS=( 'node1-rddl-testnet.twilightparadox.com' 'node2-rddl-testnet.twilightparadox.com' 'node3-rddl-testnet.twilightparadox.com' 'node4-rddl-testnet.twilightparadox.com' 'node6-rddl-testnet.twilightparadox.com' 'node7-rddl-testnet.twilightparadox.com' 'node8-rddl-testnet.twilightparadox.com' 'node9-rddl-testnet.twilightparadox.com' )
     ;;
 node1-testnet)
     config_env="./config/rddl-testnet"
@@ -722,6 +791,10 @@ node7-testnet)
 node8-testnet)
     config_env="./config/rddl-testnet"
     IPS=( 'node8-rddl-testnet.twilightparadox.com' )
+    ;;
+node9-testnet)
+    config_env="./config/rddl-testnet"
+    IPS=( 'node9-rddl-testnet.twilightparadox.com' )
     ;;
 *)
     echo "Invalid option $REPLY"
@@ -842,6 +915,10 @@ remove_ipfs)
     ;;
 install_rddl_client)
     ;;
+find_python)
+    ;;
+rm_folder)
+    ;;
 restart_crond)
     ;;
 get_rddl_client_logs)
@@ -852,7 +929,9 @@ get_unconfirmed_msgs)
     ;;
 get_node_connections)
     ;;
-upgrade_planetmint)
+upgrade_planetmint_version)
+    ;;
+upgrade_planetmint_to_2_or_later)
     ;;
 planetmint_version)
     ;;
@@ -876,6 +955,14 @@ get_device_info)
     ;;
 get_geolocation_info)
     ;;
+restart_services)
+    ;;
+attest_validator)
+    ;;
+genesis_hashes)
+    ;;
+fix_bash_profile)
+    ;;
 *)
     echo "Unknown option: $2"
     exit 1
@@ -885,13 +972,14 @@ esac
 
 for ip in "${IPS[@]}"
 do
-    echo "Executing on this IP " "$ip"
+    echo "EXECUTING on this machine" "$ip"
     $2 $ip $3 $4 $5
     if [[ "$2" == "propose_election" ]]
     then
         break
     fi
-    echo "$ip"
+    echo ""
+    echo ""
 done
 
 

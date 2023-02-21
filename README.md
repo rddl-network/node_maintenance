@@ -7,8 +7,8 @@ The install.sh script is meant to simplify installation and setup of planetmint 
 The overall process is staged into the following steps:
 
 1. install_stack: installs all dependencies and the software stack
-2. initialize_components: initializes the differenct components
-3. get_identities: get the system identites for to be configured
+2. initialize_components: initializes the different components
+3. get_identities: get the system identities for to be configured
 4. configure_components: configures the components with respect to the prior initialization
 5. start_services: starts all services
 6. verify_status: get the status of all services
