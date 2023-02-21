@@ -1,8 +1,8 @@
-# RDDL Testnet
+# RDDL Node Maintenance
 
 ## Set up stages
 
-The install.sh script is meant to simplify installation and setup of planetmint networks.
+The install.sh script is meant to simplify installation and setup of rddl network nodes.
 
 The overall process is staged into the following steps:
 
