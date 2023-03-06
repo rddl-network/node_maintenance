@@ -218,7 +218,8 @@ f1b848ead39f34a27f731c8c3456103e2878b773@node2-rddl-testnet.twilightparadox.com:
 490fe112dad16e51f2bf30a9bd924b86365f49fb@node4-rddl-testnet.twilightparadox.com:26656,\
 040b0a07746f47eb6cacd0298f4603383e031d2f@node6-rddl-testnet.twilightparadox.com:26656,\
 a36b98bee844bbc24a2d119e10c4718288e9bbf9@node7-rddl-testnet.twilightparadox.com:26656,\
-a4ee5afed56efbfbc0d08c1d030b1d0291451c59@node8-rddl-testnet.twilightparadox.com:26656\
+a4ee5afed56efbfbc0d08c1d030b1d0291451c59@node8-rddl-testnet.twilightparadox.com:26656,\
+d430ef857b66ba2c10b4f4c3138d64d6b8d150d3@node9-rddl-testnet.twilightparadox.com:26656\
 "
 
 #06ab3131913c00f7c90466ad3f84b85e5b8c4c0c@node5-rddl-testnet.twilightparadox.com:26656,\
@@ -243,7 +244,7 @@ max_num_outbound_peers = 50
 unconditional_peer_ids = ""
 
 # Maximum pause when redialing a persistent peer (if zero, exponential backoff is used)
-persistent_peers_max_dial_period = "0s"
+persistent_peers_max_dial_period = "30s"
 
 # Time to wait before flushing messages out on the connection
 flush_throttle_timeout = "100ms"
@@ -420,7 +421,7 @@ indexer = "kv"
 # When true, Prometheus metrics are served under /metrics on
 # PrometheusListenAddr.
 # Check out the documentation for the list of available metrics.
-prometheus = false
+prometheus = true
 
 # Address to listen for Prometheus collector(s) connections
 prometheus_listen_addr = ":26660"

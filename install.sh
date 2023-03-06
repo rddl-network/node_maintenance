@@ -1,4 +1,5 @@
 #!/bin/bash
+
 IPS=()
 config_env=""
 
@@ -78,6 +79,19 @@ install_deps(){
     cmds='sudo apt install -y make git software-properties-common'
     remote_exec "$ip" "$cmds"
 }
+
+get_timezone(){
+    ip=$1
+    cmds='timedatectl'
+    remote_exec "$ip" "$cmds"
+}
+
+set_timezone(){
+    ip=$1
+    cmds='sudo timedatectl set-timezone UTC'
+    remote_exec "$ip" "$cmds"
+}
+
 install_db(){
     ip=$1
     cmds="sudo apt update; sudo apt install -y mongodb"
@@ -112,7 +126,7 @@ install_planetmint(){
         source venv/bin/activate;
         sudo apt-get install python3.9-distutils;
         sudo apt-get install python3-apt;
-        pip install planetmint==2.2.3"
+        pip install planetmint==2.3.1"
     remote_exec "$ip" "$cmds"
 }
 
@@ -203,6 +217,19 @@ upgrade_planetmint_to_2_or_later(){
     start_services $ip
 }
 
+upgrade_planetmint(){
+    ip=$1
+    stop_services $ip
+    upgrade_planetmint_version $ip
+    start_services $ip
+}
+
+reset_node_state(){
+    ip=$1
+    stop_services $ip
+    reset_data $ip
+    start_services $ip
+}
 
 install_services(){
     ip=$1
@@ -243,8 +270,7 @@ upgrade_rddl_client(){
         cd rddl-client;
         git checkout main;
         git pull;
-        poetry install;
-    '
+        poetry install;'
     remote_exec "$ip" "$cmds"
 }
 
@@ -314,7 +340,7 @@ fix_pl_deps(){
 upgrade_planetmint_version(){
     ip=$1
     cmds='source venv/bin/activate; 
-    pip install planetmint==2.2.3'
+    pip install planetmint==2.3.1'
     remote_exec "$ip" "$cmds" 
 }
 
@@ -616,6 +642,31 @@ access_nodes(){
     ip=$1
     remote_exec "$ip"
 }
+
+backup_tm_config(){
+    ip=$1
+    cmds="cp -rf .tendermint/config tendermint_config_backup"
+    remote_exec "$ip" "$cmds"
+}
+
+rm_tm_backup(){
+    ip=$1
+    cmds="rm -rf tendermint_config_backup"
+    remote_exec "$ip" "$cmds"   
+}
+
+rm_tm_addrbook(){
+    ip=$1
+    cmds="rm .tendermint/config/addrbook.json && touch .tendermint/config/addrbook.json"
+    remote_exec "$ip" "$cmds"   
+}
+
+show_tm_backup(){    
+    ip=$1
+    cmds="tree tendermint_config_backup"
+    remote_exec "$ip" "$cmds" 
+}
+
 grant_access() {
     ip=$1
     cmds =    """
@@ -675,6 +726,13 @@ tm_get_status(){
     ip=$1
     cmds="curl http://localhost:26657/status"
     remote_exec "$ip" "$cmds"
+}
+
+tm_get_log(){
+    ip=$1
+    lines=$2
+    cmds="sudo tail -f -n $lines /var/log/syslog | grep tendermint"
+    remote_exec "$ip" "$cmds" 
 }
 
 tm_get_consensus_state(){
@@ -761,7 +819,8 @@ devtest)
     ;;
 rddl-testnet)
     config_env="./config/rddl-testnet"
-    IPS=( 'node1-rddl-testnet.twilightparadox.com' 'node2-rddl-testnet.twilightparadox.com' 'node3-rddl-testnet.twilightparadox.com' 'node4-rddl-testnet.twilightparadox.com' 'node6-rddl-testnet.twilightparadox.com' 'node7-rddl-testnet.twilightparadox.com' 'node8-rddl-testnet.twilightparadox.com' 'node9-rddl-testnet.twilightparadox.com' )
+    #IPS=( 'node1-rddl-testnet.twilightparadox.com' 'node2-rddl-testnet.twilightparadox.com' 'node3-rddl-testnet.twilightparadox.com' 'node4-rddl-testnet.twilightparadox.com' 'node6-rddl-testnet.twilightparadox.com' 'node7-rddl-testnet.twilightparadox.com' 'node8-rddl-testnet.twilightparadox.com' 'node9-rddl-testnet.twilightparadox.com' )
+    IPS=( 'node1-rddl-testnet.twilightparadox.com' 'node2-rddl-testnet.twilightparadox.com' 'node3-rddl-testnet.twilightparadox.com' 'node4-rddl-testnet.twilightparadox.com' 'node6-rddl-testnet.twilightparadox.com' 'node7-rddl-testnet.twilightparadox.com' 'node8-rddl-testnet.twilightparadox.com'  )
     ;;
 node1-testnet)
     config_env="./config/rddl-testnet"
@@ -936,6 +995,8 @@ upgrade_planetmint_version)
     ;;
 upgrade_planetmint_to_2_or_later)
     ;;
+upgrade_planetmint)
+    ;;
 planetmint_version)
     ;;
 upgrade_rddl_client)
@@ -966,6 +1027,22 @@ genesis_hashes)
     ;;
 fix_bash_profile)
     ;;
+reset_node_state)
+    ;;
+get_timezone)
+    ;;
+set_timezone)
+    ;;
+backup_tm_config)
+    ;;
+show_tm_backup)
+    ;;
+rm_tm_addrbook)
+    ;;
+rm_tm_backup)
+    ;;
+tm_get_log)
+    ;;
 *)
     echo "Unknown option: $2"
     exit 1
@@ -984,5 +1061,3 @@ do
     echo ""
     echo ""
 done
-
-
