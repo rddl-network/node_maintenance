@@ -18,9 +18,6 @@ remote_exec(){
     if [[ "$1" == *."twilightparadox".* ]]; then
         PORT=8680
     fi
-    if [[ "$1" == "node7-rddl-testnet.twilightparadox".* ]]; then
-        PORT=22
-    fi
     if [[ "$1" == "test.ipdb.io" ]]; then
         USER=ubuntu
     fi
@@ -64,9 +61,6 @@ copy_to(){
     USER=rddl
     if [[ "$2" == *."twilightparadox".* ]]; then
         PORT=8680
-    fi
-    if [[ "$2" == "node7-rddl-testnet.twilightparadox".* ]]; then
-        PORT=22
     fi
     if [[ "$2" == "test.ipdb.io" ]]; then
         USER=ubuntu
@@ -819,8 +813,14 @@ devtest)
     ;;
 rddl-testnet)
     config_env="./config/rddl-testnet"
-    #IPS=( 'node1-rddl-testnet.twilightparadox.com' 'node2-rddl-testnet.twilightparadox.com' 'node3-rddl-testnet.twilightparadox.com' 'node4-rddl-testnet.twilightparadox.com' 'node6-rddl-testnet.twilightparadox.com' 'node7-rddl-testnet.twilightparadox.com' 'node8-rddl-testnet.twilightparadox.com' 'node9-rddl-testnet.twilightparadox.com' )
-    IPS=( 'node1-rddl-testnet.twilightparadox.com' 'node2-rddl-testnet.twilightparadox.com' 'node3-rddl-testnet.twilightparadox.com' 'node4-rddl-testnet.twilightparadox.com' 'node6-rddl-testnet.twilightparadox.com' 'node7-rddl-testnet.twilightparadox.com' 'node8-rddl-testnet.twilightparadox.com'  )
+    IPS=( 'node1-rddl-testnet.twilightparadox.com'\
+        'node2-rddl-testnet.twilightparadox.com'\
+        'node3-rddl-testnet.twilightparadox.com'\
+        'node4-rddl-testnet.twilightparadox.com'\
+        'node6-rddl-testnet.twilightparadox.com'\
+        'node7-rddl-testnet.twilightparadox.com'\
+        'node8-rddl-testnet.twilightparadox.com'\
+        'node9-rddl-testnet.twilightparadox.com' )
     ;;
 node1-testnet)
     config_env="./config/rddl-testnet"
