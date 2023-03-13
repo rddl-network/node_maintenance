@@ -1,0 +1,33 @@
+# Copyright © 2020 Interplanetary Database Association e.V.,
+# Planetmint and IPDB software contributors.
+# SPDX-License-Identifier: (Apache-2.0 AND CC-BY-4.0)
+# Code is Apache-2.0 and docs are CC-BY-4.0
+
+version: '2.2'
+
+services:
+  planetmint-aio:
+    #image: ghcr.io/planetmint/planetmint-aio:latest
+    image: planetmint/planetmint-aio:test
+    ports:
+      - "9984:9984"
+      - "9985:9985"
+      - "26656:26656"
+      - "26657:26657"
+      - "26660:26660"
+    command: 
+      - /bin/bash
+      - -c
+      - |
+        /etc/init.d/tarantool start
+        tendermint node&
+        planetmint start
+    volumes:
+      - ./config/rddl-testnet/config.yaml:/tendermint/config/config.toml
+      - ./config/rddl-testnet/genesis.json:/tendermint/config/genesis.json
+      - ./config/planetmint-tarantool:/root/.planetmint
+  
+  rddl-explorer:
+    image: rddl:explorer2
+    ports:
+      - "80:80"

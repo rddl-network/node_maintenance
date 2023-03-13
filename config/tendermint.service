@@ -5,11 +5,7 @@ Documentation=https://tendermint.readthedocs.io/en/master/
 
 [Service]
 Restart=always
-ExecStart=/usr/local/bin/tendermint node \
-                   --p2p.laddr "tcp://0.0.0.0:26656" \
-                   --proxy_app="tcp://127.0.0.1:26658" \
-                   --consensus.create_empty_blocks=false \
-                   --p2p.pex=false
+ExecStart=/usr/local/bin/tendermint node
 WorkingDirectory=/home/rddl
 User=rddl
 Group=rddl

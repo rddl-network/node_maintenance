@@ -241,7 +241,16 @@ max_num_inbound_peers = 50
 max_num_outbound_peers = 50
 
 # List of node IDs, to which a connection will be (re)established ignoring any existing limits
-unconditional_peer_ids = ""
+unconditional_peer_ids = "\
+38cc7790460188f97bfe4d534bfe62e1b4a19536,\
+f1b848ead39f34a27f731c8c3456103e2878b773,\
+14aaa03823474d0dca08d3179fe8b9aa89ab4c0d,\
+490fe112dad16e51f2bf30a9bd924b86365f49fb,\
+040b0a07746f47eb6cacd0298f4603383e031d2f,\
+a36b98bee844bbc24a2d119e10c4718288e9bbf9,\
+a4ee5afed56efbfbc0d08c1d030b1d0291451c59,\
+d430ef857b66ba2c10b4f4c3138d64d6b8d150d3\
+"
 
 # Maximum pause when redialing a persistent peer (if zero, exponential backoff is used)
 persistent_peers_max_dial_period = "30s"
