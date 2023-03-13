@@ -25,7 +25,7 @@ services:
     volumes:
       - ./config/rddl-testnet/config.yaml:/tendermint/config/config.toml
       - ./config/rddl-testnet/genesis.json:/tendermint/config/genesis.json
-      - ./config/planetmint-tarantool:/root/.planetmint
+      - ./config/planetmint-aio/planetmint-tarantool:/root/.planetmint
   
   rddl-explorer:
     image: rddl:explorer2
