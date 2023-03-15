@@ -22,6 +22,8 @@ services:
         tendermint node&
         planetmint start
     volumes:
+      - ./.tendermint/config/node_key.json:/tendermint/config/node_key.json
+      - ./.tendermint/config/priv_validator_key.json:/tendermint/config/priv_validator_key.json
       - ./config/rddl-testnet/config.yaml:/tendermint/config/config.toml
       - ./config/rddl-testnet/genesis.json:/tendermint/config/genesis.json
       - ./config/planetmint-aio/planetmint-tarantool:/root/.planetmint

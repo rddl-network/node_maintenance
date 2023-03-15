@@ -32,3 +32,7 @@ Create a transaction, note down the transaction id and verify if the TX is prese
 1. Create transaction and write down TX-id
 2. call ./install.sh <network name> has_tx <tx-id>
 3. verify if the TX is available on all nodesg
+
+
+## Running the docker image
+1. please run 'tendermint init --home ./.tendermint' before running the planetmint-aio for the fist time.
