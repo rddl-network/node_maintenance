@@ -9,18 +9,39 @@ verify_port(){
     telnet $1 $2
 }
 
+get_port(){
+    #ip=$1
+    local PORT=22
+    if [[ "$1" == *."twilightparadox".* ]]; then
+        PORT=8680
+    fi
+    if [[ "$1" == "node5"*."chickenkiller".* ]]; then
+        PORT=8705
+    fi
+    if [[ "$1" == "node10"*."twilightparadox".* ]]; then
+        PORT=8710
+    fi
+    if [[ "$1" == "node11"*."twilightparadox".* ]]; then
+        PORT=8711
+    fi
+    echo "$PORT"
+}
+
+get_user(){
+    #ip=$1
+    local USER=rddl
+    if [[ "$1" == "test.ipdb.io" ]]; then
+        USER=ubuntu
+    fi
+    echo "$USER"
+}
+
 remote_exec(){
     #ip=$1
     #cmd=$2
     echo $2
-    PORT=22
-    USER=rddl
-    if [[ "$1" == *."twilightparadox".* ]]; then
-        PORT=8680
-    fi
-    if [[ "$1" == "test.ipdb.io" ]]; then
-        USER=ubuntu
-    fi
+    PORT=$(get_port $1)
+    USER=$(get_user $1)
 
     ssh -p $PORT $USER@$1  $2 $3 $4 $5 $6 $7
 }
@@ -57,15 +78,19 @@ copy_to(){
     #file=$1
     #ip=$2
     #path=$3
-    PORT=22
-    USER=rddl
-    if [[ "$2" == *."twilightparadox".* ]]; then
-        PORT=8680
-    fi
-    if [[ "$2" == "test.ipdb.io" ]]; then
-        USER=ubuntu
-    fi
+    PORT=$(get_port $1)
+    USER=$(get_user $1)
     scp -P $PORT $1 $USER@$2:$3
+}
+
+download_from_to(){
+    #ip=$1
+    #file=$2
+    #path=$3
+    PORT=$(get_port $1)
+    USER=$(get_user $1)
+    echo $USER@$1:$2 $3
+    scp -P $PORT $USER@$1:$2 $3
 }
 
 install_deps(){
@@ -120,7 +145,7 @@ install_planetmint(){
         source venv/bin/activate;
         sudo apt-get install python3.9-distutils;
         sudo apt-get install python3-apt;
-        pip install planetmint==2.3.1"
+        pip install planetmint==2.4.2"
     remote_exec "$ip" "$cmds"
 }
 
@@ -159,7 +184,10 @@ install_tarantool(){
 configure_tarantool(){
     ip=$1
     copy_to "./config/basic.lua" "$ip" "~/basic.lua"
-    cmds="wget https://raw.githubusercontent.com/planetmint/planetmint/main/planetmint/backend/tarantool/init.lua;
+    cmds="wget https://raw.githubusercontent.com/planetmint/planetmint/main/planetmint/backend/tarantool/opt/init.lua;
+    wget https://raw.githubusercontent.com/planetmint/planetmint/main/planetmint/backend/tarantool/opt/functions.lua;
+    wget https://raw.githubusercontent.com/planetmint/planetmint/main/planetmint/backend/tarantool/opt/migrations.lua;
+    sudo cp -f init.lua /etc/tarantool/instances.available/planetmint.lua;
     sudo cp -f init.lua /etc/tarantool/instances.available/planetmint.lua;
     sudo systemctl stop tarantool@example.service;
     sudo systemctl stop tarantool@planetmint.service;
@@ -334,7 +362,7 @@ fix_pl_deps(){
 upgrade_planetmint_version(){
     ip=$1
     cmds='source venv/bin/activate; 
-    pip install planetmint==2.3.1'
+    pip install planetmint==2.4.2'
     remote_exec "$ip" "$cmds" 
 }
 
@@ -696,7 +724,7 @@ configure_components(){
 
 get_rddl_client_logs(){
     ip=$1
-    cmds="sudo grep rddl-client /var/log/syslog | tail -1"
+    cmds="sudo grep rddl-client /var/log/syslog | tail -10"
     remote_exec "$ip" "$cmds"
 }
 
@@ -762,6 +790,25 @@ genesis_hashes(){
 
 name_to_ip(){
     dig $1 | grep $1
+}
+
+tm_set_moniker(){
+    ip=$1
+    cmds='sed -i "/moniker = \"ip-172-31-4-27\"/ c moniker = \"RDDL-Node9\"" ~/.tendermint/config/config.toml'
+    remote_exec "$ip" "$cmds" 
+}
+
+tm_get_moniker(){
+    ip=$1
+    cmds='grep moniker ~/.tendermint/config/config.toml'
+    remote_exec "$ip" "$cmds" 
+}
+
+collect_logs(){
+    ip=$1
+    mkdir -p ./logs/$ip
+    download_from_to "$ip" "/home/rddl/planetmint.log" "./logs/$ip/planetmint.log"
+    download_from_to "$ip" "/home/rddl/planetmint-errors.log" "./logs/$ip/planetmint-errors.log"
 }
 
 #OSITIONAL_ARGS=()
@@ -840,7 +887,7 @@ node4-testnet)
     ;;
 node5-testnet)
     config_env="./config/rddl-testnet"
-    IPS=( 'node5-rddl-testnet.twilightparadox.com' )
+    IPS=( 'node5-rddl-testnet.chickenkiller.com' )
     ;;
 node6-testnet)
     config_env="./config/rddl-testnet"
@@ -857,6 +904,14 @@ node8-testnet)
 node9-testnet)
     config_env="./config/rddl-testnet"
     IPS=( 'node9-rddl-testnet.twilightparadox.com' )
+    ;;
+node10-testnet)
+    config_env="./config/rddl-testnet"
+    IPS=( 'node10-rddl-testnet.twilightparadox.com' )
+    ;;
+node11-testnet)
+    config_env="./config/rddl-testnet"
+    IPS=( 'node11-rddl-testnet.twilightparadox.com' )
     ;;
 *)
     echo "Invalid option $REPLY"
@@ -1042,6 +1097,12 @@ rm_tm_addrbook)
 rm_tm_backup)
     ;;
 tm_get_log)
+    ;;
+tm_get_moniker)
+    ;;
+tm_set_moniker)
+    ;;
+collect_logs)
     ;;
 *)
     echo "Unknown option: $2"
