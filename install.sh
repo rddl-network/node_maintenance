@@ -24,6 +24,7 @@ get_port(){
     if [[ "$1" == "node11"*."twilightparadox".* ]]; then
         PORT=8711
     fi
+
     echo "$PORT"
 }
 
@@ -145,7 +146,7 @@ install_planetmint(){
         source venv/bin/activate;
         sudo apt-get install python3.9-distutils;
         sudo apt-get install python3-apt;
-        pip install planetmint==2.4.2"
+        pip install planetmint==2.4.4"
     remote_exec "$ip" "$cmds"
 }
 
@@ -185,9 +186,6 @@ configure_tarantool(){
     ip=$1
     copy_to "./config/basic.lua" "$ip" "~/basic.lua"
     cmds="wget https://raw.githubusercontent.com/planetmint/planetmint/main/planetmint/backend/tarantool/opt/init.lua;
-    wget https://raw.githubusercontent.com/planetmint/planetmint/main/planetmint/backend/tarantool/opt/functions.lua;
-    wget https://raw.githubusercontent.com/planetmint/planetmint/main/planetmint/backend/tarantool/opt/migrations.lua;
-    sudo cp -f init.lua /etc/tarantool/instances.available/planetmint.lua;
     sudo cp -f init.lua /etc/tarantool/instances.available/planetmint.lua;
     sudo systemctl stop tarantool@example.service;
     sudo systemctl stop tarantool@planetmint.service;
@@ -195,6 +193,16 @@ configure_tarantool(){
     sudo ln -s -f /etc/tarantool/instances.available/planetmint.lua /etc/tarantool/instances.enabled/planetmint.lua;
     sudo systemctl restart tarantool.service;
     sudo systemctl enable tarantool@planetmint.service;
+    sudo systemctl start tarantool@planetmint.service"
+    remote_exec "$ip" "$cmds"
+}
+
+reconfigure_tarantool(){
+    ip=$1
+    cmds="sudo systemctl stop tarantool@example.service;
+    sudo systemctl stop tarantool@planetmint.service;
+    sudo cp -f venv/lib/python3.9/site-packages/planetmint/backend/tarantool/opt/init.lua /etc/tarantool/instances.available/planetmint.lua;
+    sudo systemctl start tarantool.service;
     sudo systemctl start tarantool@planetmint.service"
     remote_exec "$ip" "$cmds"
 }
@@ -243,6 +251,8 @@ upgrade_planetmint(){
     ip=$1
     stop_services $ip
     upgrade_planetmint_version $ip
+    reconfigure_tarantool $ip
+    planetmint_run_migration $ip
     start_services $ip
 }
 
@@ -362,7 +372,14 @@ fix_pl_deps(){
 upgrade_planetmint_version(){
     ip=$1
     cmds='source venv/bin/activate; 
-    pip install planetmint==2.4.2'
+    pip install planetmint==2.4.4'
+    remote_exec "$ip" "$cmds" 
+}
+
+planetmint_run_migration(){
+    ip=$1
+    cmds='source venv/bin/activate; 
+    planetmint migrate'
     remote_exec "$ip" "$cmds" 
 }
 
@@ -374,7 +391,11 @@ planetmint_version(){
     remote_exec "$ip" "$cmds" 
 }
 
-
+tarantool_version(){
+    ip=$1
+    cmds='tarantool --version'
+    remote_exec "$ip" "$cmds" 
+}
 
 
 vote_approve(){
@@ -860,9 +881,9 @@ devtest)
     ;;
 rddl-testnet)
     config_env="./config/rddl-testnet"
-    IPS=( 'node1-rddl-testnet.twilightparadox.com'\
-        'node2-rddl-testnet.twilightparadox.com'\
-        'node3-rddl-testnet.twilightparadox.com'\
+    IPS=( 'node1-rddl-testnet.twilightparadox.com'\ 
+        'node2-rddl-testnet.twilightparadox.com'\        
+        #'node3-rddl-testnet.twilightparadox.com'\
         'node4-rddl-testnet.twilightparadox.com'\
         'node6-rddl-testnet.twilightparadox.com'\
         'node7-rddl-testnet.twilightparadox.com'\
@@ -1103,6 +1124,10 @@ tm_get_moniker)
 tm_set_moniker)
     ;;
 collect_logs)
+    ;;
+tarantool_version)
+    ;;
+planetmint_run_migration)
     ;;
 *)
     echo "Unknown option: $2"
