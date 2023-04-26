@@ -24,7 +24,9 @@ get_port(){
     if [[ "$1" == "node11"*."twilightparadox".* ]]; then
         PORT=8711
     fi
-
+    #   if [[ "$1" == "node8"*."twilightparadox".* ]]; then
+    #       PORT=22
+    #   fi
     echo "$PORT"
 }
 
@@ -146,7 +148,7 @@ install_planetmint(){
         source venv/bin/activate;
         sudo apt-get install python3.9-distutils;
         sudo apt-get install python3-apt;
-        pip install planetmint==2.4.4"
+        pip install planetmint==2.4.5"
     remote_exec "$ip" "$cmds"
 }
 
@@ -251,8 +253,8 @@ upgrade_planetmint(){
     ip=$1
     stop_services $ip
     upgrade_planetmint_version $ip
-    reconfigure_tarantool $ip
-    planetmint_run_migration $ip
+    #reconfigure_tarantool $ip
+    #planetmint_run_migration $ip
     start_services $ip
 }
 
@@ -372,7 +374,7 @@ fix_pl_deps(){
 upgrade_planetmint_version(){
     ip=$1
     cmds='source venv/bin/activate; 
-    pip install planetmint==2.4.4'
+    pip install planetmint==2.4.5'
     remote_exec "$ip" "$cmds" 
 }
 
@@ -883,7 +885,7 @@ rddl-testnet)
     config_env="./config/rddl-testnet"
     IPS=( 'node1-rddl-testnet.twilightparadox.com'\ 
         'node2-rddl-testnet.twilightparadox.com'\        
-        #'node3-rddl-testnet.twilightparadox.com'\
+        'node3-rddl-testnet.twilightparadox.com'\
         'node4-rddl-testnet.twilightparadox.com'\
         'node6-rddl-testnet.twilightparadox.com'\
         'node7-rddl-testnet.twilightparadox.com'\
