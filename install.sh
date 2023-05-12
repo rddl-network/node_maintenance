@@ -840,6 +840,28 @@ collect_logs(){
     download_from_to "$ip" "/home/rddl/planetmint-errors.log" "./logs/$ip/planetmint-errors.log"
 }
 
+generate_tm_log(){
+    ip=$1
+    cmds="sudo cat /var/log/syslog | grep tendermint > /home/rddl/tendermint.log" 
+    remote_exec "$ip" "$cmds" 
+}
+
+collect_tm_logs(){
+    ip=$1
+    mkdir -p ./logs/$ip
+    generate_tm_log "$ip"
+    download_from_to "$ip" "/home/rddl/tendermint.log" "./logs/$ip/tendermint.log"
+}
+
+
+
+collect_config_files(){
+    ip=$1
+    mkdir -p ./logs/$ip
+    download_from_to "$ip" "/home/rddl/.tendermint/config/config.toml" "./logs/$ip/config.toml"
+}
+
+
 #OSITIONAL_ARGS=()
 #while [[ $# -gt 0 ]]; do
 #  case $1 in
@@ -890,7 +912,7 @@ devtest)
 rddl-testnet)   
     config_env="./config/rddl-testnet"
     IPS=( 'node1-rddl-testnet.twilightparadox.com'\ 
-        #'node2-rddl-testnet.twilightparadox.com'\        
+        'node2-rddl-testnet.twilightparadox.com'\        
         'node3-rddl-testnet.twilightparadox.com'\
         'node4-rddl-testnet.twilightparadox.com'\
         'node6-rddl-testnet.twilightparadox.com'\
@@ -1138,6 +1160,10 @@ tarantool_version)
 planetmint_run_migration)
     ;;
 tm_get_connected_peers)
+    ;;
+collect_config_files)
+    ;;
+collect_tm_logs)
     ;;
 *)
     echo "Unknown option: $2"
