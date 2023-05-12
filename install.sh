@@ -798,6 +798,12 @@ tm_get_net_info(){
     remote_exec "$ip" "$cmds"
 }
 
+tm_get_connected_peers(){
+    ip=$1
+    cmds="curl http://localhost:26657/net_info | grep moniker"
+    remote_exec "$ip" "$cmds"
+}
+
 
 get_node_connections(){
     ip=$1
@@ -881,10 +887,10 @@ devtest)
     IPS=('3.73.66.61')
     config_env="./config/devtest"
     ;;
-rddl-testnet)
+rddl-testnet)   
     config_env="./config/rddl-testnet"
     IPS=( 'node1-rddl-testnet.twilightparadox.com'\ 
-        'node2-rddl-testnet.twilightparadox.com'\        
+        #'node2-rddl-testnet.twilightparadox.com'\        
         'node3-rddl-testnet.twilightparadox.com'\
         'node4-rddl-testnet.twilightparadox.com'\
         'node6-rddl-testnet.twilightparadox.com'\
@@ -1130,6 +1136,8 @@ collect_logs)
 tarantool_version)
     ;;
 planetmint_run_migration)
+    ;;
+tm_get_connected_peers)
     ;;
 *)
     echo "Unknown option: $2"
