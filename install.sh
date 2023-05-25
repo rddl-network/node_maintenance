@@ -19,10 +19,16 @@ get_port(){
         PORT=8705
     fi
     if [[ "$1" == "node10"*."twilightparadox".* ]]; then
-        PORT=8710
+        PORT=8680
     fi
     if [[ "$1" == "node11"*."twilightparadox".* ]]; then
         PORT=8711
+    fi
+    if [[ "$1" == "node14"*."twilightparadox".* ]]; then
+        PORT=8690
+    fi
+    if [[ "$1" == "node15"*."twilightparadox".* ]]; then
+        PORT=8700
     fi
     #   if [[ "$1" == "node8"*."twilightparadox".* ]]; then
     #       PORT=22
@@ -81,7 +87,7 @@ copy_to(){
     #file=$1
     #ip=$2
     #path=$3
-    PORT=$(get_port $1)
+    PORT=$(get_port $2)
     USER=$(get_user $1)
     scp -P $PORT $1 $USER@$2:$3
 }
@@ -237,7 +243,7 @@ install_stack(){
     install_python "$ip"
     install_nginx "$ip"
     install_planetmint "$ip"
-    install_services "$servicesip"
+    install_services "$ip"
 }
 
 upgrade_planetmint_to_2_or_later(){
@@ -838,6 +844,7 @@ collect_logs(){
     mkdir -p ./logs/$ip
     download_from_to "$ip" "/home/rddl/planetmint.log" "./logs/$ip/planetmint.log"
     download_from_to "$ip" "/home/rddl/planetmint-errors.log" "./logs/$ip/planetmint-errors.log"
+    collect_tm_logs "$ip"
 }
 
 generate_tm_log(){
@@ -860,6 +867,13 @@ collect_config_files(){
     mkdir -p ./logs/$ip
     download_from_to "$ip" "/home/rddl/.tendermint/config/config.toml" "./logs/$ip/config.toml"
 }
+
+curl_hw_03(){
+    ip=$1
+    cmds="curl http://hw-03:8000" 
+    remote_exec "$ip" "$cmds" 
+}
+
 
 
 #OSITIONAL_ARGS=()
@@ -918,7 +932,10 @@ rddl-testnet)
         'node6-rddl-testnet.twilightparadox.com'\
         'node7-rddl-testnet.twilightparadox.com'\
         'node8-rddl-testnet.twilightparadox.com'\
-        'node9-rddl-testnet.twilightparadox.com' )
+        'node9-rddl-testnet.twilightparadox.com'\
+        'node10-rddl-testnet.twilightparadox.com'\
+        'node14-rddl-testnet.twilightparadox.com'\ 
+        'node15-rddl-testnet.twilightparadox.com'  )
     ;;
 node1-testnet)
     config_env="./config/rddl-testnet"
@@ -963,6 +980,14 @@ node10-testnet)
 node11-testnet)
     config_env="./config/rddl-testnet"
     IPS=( 'node11-rddl-testnet.twilightparadox.com' )
+    ;;
+node14-testnet)
+    config_env="./config/rddl-testnet"
+    IPS=( 'node14-rddl-testnet.twilightparadox.com' )
+    ;;
+node15-testnet)
+    config_env="./config/rddl-testnet"
+    IPS=( 'node15-rddl-testnet.twilightparadox.com' )
     ;;
 *)
     echo "Invalid option $REPLY"
@@ -1164,6 +1189,8 @@ tm_get_connected_peers)
 collect_config_files)
     ;;
 collect_tm_logs)
+    ;;
+curl_hw_03)
     ;;
 *)
     echo "Unknown option: $2"
