@@ -15,8 +15,8 @@ get_port(){
     if [[ "$1" == *."twilightparadox".* ]]; then
         PORT=8680
     fi
-    if [[ "$1" == "node5"*."chickenkiller".* ]]; then
-        PORT=8705
+    if [[ "$1" == *."chickenkiller".* ]]; then
+        PORT=8680
     fi
     if [[ "$1" == "node10"*."twilightparadox".* ]]; then
         PORT=8680
@@ -929,6 +929,7 @@ rddl-testnet)
         'node2-rddl-testnet.twilightparadox.com'\        
         'node3-rddl-testnet.twilightparadox.com'\
         'node4-rddl-testnet.twilightparadox.com'\
+        'node5-rddl-testnet.twilightparadox.com'\
         'node6-rddl-testnet.twilightparadox.com'\
         'node7-rddl-testnet.twilightparadox.com'\
         'node8-rddl-testnet.twilightparadox.com'\

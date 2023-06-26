@@ -7,7 +7,7 @@ version: '2.2'
 
 services:
   planetmint-aio:
-    image: ghcr.io/planetmint/planetmint-aio:latest
+    image: ghcr.io/planetmint/planetmint-aio:latest-aio
     ports:
       - "9984:9984"
       - "9985:9985"
@@ -19,6 +19,7 @@ services:
       - -c
       - |
         /etc/init.d/tarantool start
+        tendermint init
         tendermint node&
         planetmint start
     volumes:
