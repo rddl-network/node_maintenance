@@ -982,6 +982,10 @@ node11-testnet)
     config_env="./config/rddl-testnet"
     IPS=( 'node11-rddl-testnet.twilightparadox.com' )
     ;;
+node12-testnet)
+    config_env="./config/rddl-testnet"
+    IPS=( 'node12-rddl-testnet.twilightparadox.com' )
+    ;;
 node14-testnet)
     config_env="./config/rddl-testnet"
     IPS=( 'node14-rddl-testnet.twilightparadox.com' )
